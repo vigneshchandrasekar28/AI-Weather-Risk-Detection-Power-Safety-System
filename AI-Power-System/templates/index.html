@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Power Safety - AI Weather Risk Detection &amp; Power Safety System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <!-- Google Fonts for Modern Typographic Hierarchy -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="dashboard-wrapper">
+    
+    <!-- 1. HEADER -->
+    <header class="dashboard-header" id="dashboardHeader">
+      <div class="header-main">
+        <div class="brand-row">
+          <div class="logo-badge">
+            <span class="lightning-icon">⚡</span>
+            <span class="brand-title">AI POWER SAFETY</span>
+          </div>
+          <div class="live-monitoring-tag">
+            <span class="live-pulse-dot"></span>
+            <span class="live-text">Live Weather Monitoring</span>
+          </div>
+        </div>
+        <p class="header-subtitle">AI Weather Risk Detection &amp; Power Safety System</p>
+      </div>
+
+      <!-- Academic Safety Disclaimer (Prominent & Mandatory) -->
+      <div class="safety-disclaimer-card" id="academicSafetyDisclaimer">
+        <span class="disclaimer-icon">⚠️</span>
+        <div class="disclaimer-content">
+          <strong>ACADEMIC SIMULATION DISCLAIMER:</strong> This is a software-only prototype for college demonstration. It does <strong>NOT</strong> control real electrical mains power or connect to electrical hardware. All POWER ON / POWER OFF outputs are simulated advisory recommendations.
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. LOCATION & CITY SEARCH BAR -->
+    <section class="location-search-section">
+      <div class="location-banner">
+        <div class="current-location">
+          <span class="loc-pin">📍</span>
+          <span class="loc-label">Current Monitored Location:</span>
+          <strong class="loc-name" id="locationDisplay">{{ default_city | default('Coimbatore, Tamil Nadu') }}</strong>
+        </div>
+
+        <form id="weatherSearchForm" class="city-search-bar" onsubmit="return false;">
+          <div class="search-input-wrap">
+            <input 
+              type="text" 
+              id="cityInput" 
+              class="city-input" 
+              placeholder="Search an Indian city or location" 
+              value="Coimbatore, Tamil Nadu"
+              autocomplete="off"
+            />
+            <button type="button" id="clearCityBtn" class="clear-btn" title="Reset city">&times;</button>
+            <div id="geoSuggestionsList" class="geo-suggestions-dropdown hidden"></div>
+          </div>
+          <button type="submit" id="checkWeatherBtn" class="btn btn-search">
+            <span class="btn-icon">🔍</span>
+            <span>Check Weather</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Popular Indian Locations Quick Chips -->
+      <div class="popular-locations-row">
+        <span class="popular-label">Popular Indian Locations:</span>
+        <div class="popular-chips">
+          <button type="button" class="city-quick-chip" data-city="Coimbatore">Coimbatore</button>
+          <button type="button" class="city-quick-chip" data-city="Chennai">Chennai</button>
+          <button type="button" class="city-quick-chip" data-city="Pollachi">Pollachi</button>
+          <button type="button" class="city-quick-chip" data-city="Ooty">Ooty</button>
+          <button type="button" class="city-quick-chip" data-city="Madurai">Madurai</button>
+          <button type="button" class="city-quick-chip" data-city="Salem">Salem</button>
+          <button type="button" class="city-quick-chip" data-city="Erode">Erode</button>
+          <button type="button" class="city-quick-chip" data-city="Tiruppur">Tiruppur</button>
+          <button type="button" class="city-quick-chip" data-city="Trichy">Trichy</button>
+          <button type="button" class="city-quick-chip" data-city="Bengaluru">Bengaluru</button>
+          <button type="button" class="city-quick-chip" data-city="Mumbai">Mumbai</button>
+          <button type="button" class="city-quick-chip" data-city="Delhi">Delhi</button>
+          <button type="button" class="city-quick-chip" data-city="Kolkata">Kolkata</button>
+        </div>
+      </div>
+
+      <!-- Quick Viva Demonstration Presets -->
+      <div class="quick-scenarios-bar">
+        <span class="scenario-label">Quick Scenarios for Viva:</span>
+        <div class="scenario-chips">
+          <button type="button" class="scenario-chip" data-scenario="safe_clear">☀️ Safe Weather</button>
+          <button type="button" class="scenario-chip" data-scenario="monsoon_moderate">🌧️ Moderate Monsoon</button>
+          <button type="button" class="scenario-chip" data-scenario="severe_thunderstorm">⛈️ Severe Thunderstorm</button>
+          <button type="button" class="scenario-chip" data-scenario="cyclone_gale">🌪️ Cyclone Gale</button>
+          <button type="button" class="scenario-chip" data-scenario="flood_downpour">🌊 Torrential Downpour</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATUS ALERT / NOTIFICATION -->
+    <div id="statusAlert" class="alert-banner hidden">
+      <span class="alert-symbol">ℹ️</span>
+      <span id="alertMessage" class="alert-text"></span>
+      <button type="button" id="closeAlertBtn" class="alert-close">&times;</button>
+    </div>
+
+    <!-- 3. LIVE WEATHER CARDS (Replaces manual input fields) -->
+    <section class="weather-cards-section">
+      <div class="section-heading-row">
+        <h2 class="section-title">Live Weather Data</h2>
+        <span class="section-badge">Direct Meteorological Telemetry</span>
+      </div>
+
+      <div class="weather-grid">
+        <!-- Temperature Card -->
+        <div class="weather-card" id="tempCard">
+          <div class="card-icon-wrap icon-temp">🌡</div>
+          <div class="card-content">
+            <span class="card-label">Temperature</span>
+            <div class="card-value-row">
+              <span class="card-value" id="tempValue">{{ temperature | default('28') }}</span>
+              <span class="card-unit">°C</span>
+            </div>
+            <span class="card-subtext" id="tempSubtext">Nominal Substation Thermal Range</span>
+          </div>
+        </div>
+
+        <!-- Rainfall Card -->
+        <div class="weather-card" id="rainCard">
+          <div class="card-icon-wrap icon-rain">🌧</div>
+          <div class="card-content">
+            <span class="card-label">Rainfall</span>
+            <div class="card-value-row">
+              <span class="card-value" id="rainValue">{{ rainfall | default('0') }}</span>
+              <span class="card-unit">mm</span>
+            </div>
+            <span class="card-subtext" id="rainSubtext">Precipitation Accumulation Rate</span>
+          </div>
+        </div>
+
+        <!-- Wind Speed Card -->
+        <div class="weather-card" id="windCard">
+          <div class="card-icon-wrap icon-wind">💨</div>
+          <div class="card-content">
+            <span class="card-label">Wind Speed</span>
+            <div class="card-value-row">
+              <span class="card-value" id="windValue">{{ wind_speed | default('12') }}</span>
+              <span class="card-unit">km/h</span>
+            </div>
+            <span class="card-subtext" id="windSubtext">Distribution Line Strain Watch</span>
+          </div>
+        </div>
+
+        <!-- Humidity Card -->
+        <div class="weather-card" id="humidityCard">
+          <div class="card-icon-wrap icon-humidity">💧</div>
+          <div class="card-content">
+            <span class="card-label">Humidity</span>
+            <div class="card-value-row">
+              <span class="card-value" id="humidityValue">{{ humidity | default('55') }}</span>
+              <span class="card-unit">%</span>
+            </div>
+            <span class="card-subtext" id="humiditySubtext">Insulator Dielectric Margin</span>
+          </div>
+        </div>
+
+        <!-- Weather Condition Card -->
+        <div class="weather-card condition-card" id="conditionCard">
+          <div class="card-icon-wrap icon-weather" id="weatherIconSymbol">⛈</div>
+          <div class="card-content">
+            <span class="card-label">Weather</span>
+            <div class="card-value-row">
+              <span class="card-value text-capitalize" id="weatherConditionValue">{{ weather_condition | default('Clear Sky') }}</span>
+            </div>
+            <span class="card-subtext" id="weatherDescriptionSubtext">Atmospheric Classification</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN TWO-COLUMN DASHBOARD (5. Power Safety & 4. AI Risk Analysis) -->
+    <section class="core-analysis-grid">
+      
+      <!-- 5. POWER SAFETY RECOMMENDATION (Large Prominent Section) -->
+      <div class="power-recommendation-card state-power-on" id="powerRecommendationCard">
+        <div class="card-top-bar">
+          <span class="recom-badge">⚡ POWER SAFETY RECOMMENDATION</span>
+          <span class="sim-pill">Software Simulation</span>
+        </div>
+
+        <div class="power-status-display">
+          <div class="power-status-symbol" id="powerStatusSymbol">⚡</div>
+          <div class="power-status-text" id="powerStatusText">{{ power_status | default('POWER ON') }}</div>
+        </div>
+
+        <div class="recommendation-reason-box">
+          <span class="reason-label">Reason:</span>
+          <p class="reason-text" id="powerReasonText">
+            "{{ reason | default('Weather conditions are currently safe.') }}"
+          </p>
+        </div>
+
+        <div class="safety-advisory-note">
+          <span class="advisory-icon">🔒</span>
+          <span><strong>Safety Notice:</strong> Simulated software advisory. This system does not actuate high-voltage physical grid breakers.</span>
+        </div>
+      </div>
+
+      <!-- 4. AI RISK ANALYSIS (Large Professional Card) -->
+      <div class="ai-risk-card" id="aiRiskCard">
+        <div class="card-top-bar">
+          <h3 class="risk-card-title">AI RISK ANALYSIS</h3>
+          <span class="risk-level-badge level-low" id="riskLevelBadge">LOW</span>
+        </div>
+
+        <!-- Risk Score & Visual Progress Gauge Bar -->
+        <div class="risk-score-container">
+          <div class="score-meta-row">
+            <span class="score-caption">Calculated Weather Risk Score:</span>
+            <div class="score-number-wrap">
+              <span class="score-digits" id="riskScoreValue">{{ risk_score | default('15') }}</span>
+              <span class="score-denom">/ 100</span>
+            </div>
+          </div>
+
+          <!-- Visual Progress/Gauge Bar -->
+          <div class="gauge-bar-track">
+            <div class="gauge-bar-fill fill-low" id="gaugeBarFill" style="width: 15%;"></div>
+          </div>
+          <div class="gauge-scale-legend">
+            <span>0 Low (0–29)</span>
+            <span>Medium (30–59)</span>
+            <span>High (60–100)</span>
+          </div>
+        </div>
+
+        <!-- Risk Factors Table -->
+        <div class="risk-factors-section">
+          <h4 class="factors-title">Risk Factors Breakdown</h4>
+          <div class="factors-table">
+            <div class="factor-row">
+              <span class="factor-item"><span class="factor-icon">🌧</span> Rainfall</span>
+              <span class="factor-severity severity-low" id="factorRain">LOW</span>
+            </div>
+            <div class="factor-row">
+              <span class="factor-item"><span class="factor-icon">💨</span> Wind Speed</span>
+              <span class="factor-severity severity-low" id="factorWind">LOW</span>
+            </div>
+            <div class="factor-row">
+              <span class="factor-item"><span class="factor-icon">⛈</span> Thunderstorm</span>
+              <span class="factor-severity severity-none" id="factorThunder">NOT DETECTED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Short Explanation -->
+        <div class="risk-explanation-box">
+          <span class="expl-label">AI Diagnostic Analysis:</span>
+          <p class="expl-text" id="aiExplanationText">
+            All atmospheric telemetry parameters remain within safe grid operating tolerances.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MIDDLE ROW: 6. SYSTEM STATUS, 7. AUTO MONITORING, 8. RISK HISTORY -->
+    <section class="operations-grid">
+      
+      <!-- 6. SYSTEM STATUS -->
+      <div class="ops-card status-card">
+        <h3 class="ops-card-title">System Status</h3>
+        <div class="status-list">
+          <div class="status-item">
+            <span class="status-name">Weather API</span>
+            <span class="status-value status-online" id="statusApi">
+              <span class="dot green-dot"></span> Connected
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="status-name">AI Risk Engine</span>
+            <span class="status-value status-online" id="statusEngine">
+              <span class="dot green-dot"></span> Active
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="status-name">Monitoring</span>
+            <span class="status-value status-online" id="statusMonitoring">
+              <span class="dot green-dot"></span> Active
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. AUTO MONITORING -->
+      <div class="ops-card auto-monitor-card">
+        <h3 class="ops-card-title">Auto Monitoring</h3>
+        <div class="toggle-control-row">
+          <span class="toggle-label-text">Periodic Weather Polling:</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoMonitorToggle" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        
+        <div class="monitor-info-block">
+          <p class="monitor-desc" id="monitorStatusDesc">
+            Click toggle to enable continuous automatic checking.
+          </p>
+          <div class="timestamp-badge">
+            <span class="clock-icon">🕒</span>
+            <span id="lastUpdatedTimestamp">Last updated: Just now</span>
+          </div>
+          <div id="countdownBarWrap" class="countdown-bar-wrap hidden">
+            <span class="countdown-label" id="countdownLabel">Next check in: 30s</span>
+            <div class="countdown-track">
+              <div class="countdown-fill" id="countdownFill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. RISK HISTORY -->
+      <div class="ops-card history-card">
+        <div class="history-header">
+          <h3 class="ops-card-title">Risk Score History</h3>
+          <span class="history-sub">Recent timeline</span>
+        </div>
+        
+        <div class="history-list" id="riskHistoryList">
+          <!-- Populated dynamically via JavaScript with example initial records -->
+          <div class="history-item">
+            <span class="history-time">10:00</span>
+            <div class="history-bar-track">
+              <div class="history-bar-fill bar-low" style="width: 35%;"></div>
+            </div>
+            <span class="history-val">35</span>
+          </div>
+          <div class="history-item">
+            <span class="history-time">10:05</span>
+            <div class="history-bar-track">
+              <div class="history-bar-fill bar-med" style="width: 42%;"></div>
+            </div>
+            <span class="history-val">42</span>
+          </div>
+          <div class="history-item">
+            <span class="history-time">10:10</span>
+            <div class="history-bar-track">
+              <div class="history-bar-fill bar-med" style="width: 55%;"></div>
+            </div>
+            <span class="history-val">55</span>
+          </div>
+          <div class="history-item active-history">
+            <span class="history-time">10:15</span>
+            <div class="history-bar-track">
+              <div class="history-bar-fill bar-high" style="width: 72%;"></div>
+            </div>
+            <span class="history-val font-bold">72</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. HOW IT WORKS (Visual Workflow) -->
+    <section class="how-it-works-section">
+      <div class="section-heading-row text-center">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subdesc">Five-stage autonomous meteorological risk evaluation and simulated power isolation pipeline</p>
+      </div>
+
+      <div class="workflow-chain">
+        <!-- Stage 1 -->
+        <div class="workflow-node">
+          <div class="node-icon-circle node-blue">🌐</div>
+          <h4 class="node-title">Weather API</h4>
+          <p class="node-desc">Fetches real-time atmospheric conditions for the target city using OpenWeatherMap.</p>
+        </div>
+
+        <div class="workflow-arrow">&darr;</div>
+
+        <!-- Stage 2 -->
+        <div class="workflow-node">
+          <div class="node-icon-circle node-sky">📊</div>
+          <h4 class="node-title">Live Weather Data</h4>
+          <p class="node-desc">Parses ambient temperature, rainfall rate, wind speed, humidity, and condition IDs.</p>
+        </div>
+
+        <div class="workflow-arrow">&darr;</div>
+
+        <!-- Stage 3 -->
+        <div class="workflow-node">
+          <div class="node-icon-circle node-purple">🧠</div>
+          <h4 class="node-title">AI Risk Analysis</h4>
+          <p class="node-desc">Evaluates meteorological factors against mathematical electrical hazard thresholds.</p>
+        </div>
+
+        <div class="workflow-arrow">&darr;</div>
+
+        <!-- Stage 4 -->
+        <div class="workflow-node">
+          <div class="node-icon-circle node-amber">📈</div>
+          <h4 class="node-title">Risk Score</h4>
+          <p class="node-desc">Computes a normalized index from 0 to 100 with LOW, MEDIUM, or HIGH risk classification.</p>
+        </div>
+
+        <div class="workflow-arrow">&darr;</div>
+
+        <!-- Stage 5 -->
+        <div class="workflow-node">
+          <div class="node-icon-circle node-emerald">⚡</div>
+          <h4 class="node-title">Power Recommendation</h4>
+          <p class="node-desc">Generates simulated POWER ON or POWER OFF advisory to protect grid infrastructure.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="dashboard-footer">
+      <p class="footer-title"><strong>AI Weather Risk Detection and Power Safety System</strong></p>
+      <p class="footer-details">Academic Demonstration Prototype &bull; Tech Stack: Python 3, Flask, HTML5, CSS3, JavaScript, OpenWeatherMap API</p>
+      <p class="footer-sub">Software simulation only. Does not physically disconnect mains electricity or high-voltage equipment.</p>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
